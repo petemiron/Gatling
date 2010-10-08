@@ -1,0 +1,33 @@
+h1. Gatling Analytics
+
+*Version:* 0.1.5
+
+*License:* Dual licensed under:
+"MIT":http://www.opensource.org/licenses/mit-license.php
+"GPLv3":http://www.opensource.org/licenses/gpl-3.0.html
+
+*Author:* "Eric Garside":http://code.knewton.com/
+
+*Size:* 2.9K Closure Compiled, 12K Source
+
+h2. Overview
+
+Provides a framework for using non-asynchronous tracking pixles asynchronously. Using gatling, almost any third party blocking tracking pixel can be reliably fired after the DomReady event, meaning that you can implement as many trackers as you need without it impacting the performance of your webpages. It is recommended you use this plugin with "jQuery 1.4.2":http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js
+
+h2. Browser Support
+
+IE6+, WebKit Browsers (Safari, Chrome), Firefox 2+
+
+h2. Simple Example
+
+Check the "example.html" file for a quick example.
+
+h2. Documentation
+
+Check out the "Gatling Wiki":http://github.com/Knewton/Gatling/wiki
+
+h2. Changelog
+
+*Version 0.1*
+
+* Initial Release
