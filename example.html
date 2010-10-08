@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+	<head>
+		<title>Gatling Trackers Example</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		
+		<!-- Include jQuery from Google's CDN -->
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		
+		<!-- Include the Gatling plugin -->
+		<script type="text/javascript" src="jquery.gatling.js"></script>
+		
+		<!-- Example Usage -->
+		<script type="text/javascript">
+		/**
+		 *	Example gatling usage.
+		 *
+		 *	Note: This is only a standard closure, not a jQuery DomReady wrapper.
+		 *	Gatling will always trigger after DomReady, so it can be configured
+		 *	before that happens.
+		 */
+		(function ($) {
+		
+		//------------------------------
+		//
+		//  Tracker Declaration
+		//
+		//------------------------------
+		
+		/**
+		 *	The first thing you must do in gatling is declare what trackers you
+		 *	will be using. The declaration phase of gatling DOES NOT FIRE ANYTHING.
+		 *	This is merely defining how each of the different blocking pixels should
+		 *	be handled by gatling. You can declare any number of trackers, but you
+		 *	need only define a given tracker once, even if you plan to use it multiple
+		 *	times for multiple different accounts.
+		 *
+		 *	For example, if you wanted to notify two different Google Analytics accounts,
+		 *	you only need to _define_ the gatling tracker once.
+		 */
+		$.gatling.declare(
+		[
+			/**
+			 *	An example of a javascript-based tracking library, Google Analytics.
+			 */
+			{
+				/**
+				 *	The name of the tracker.
+				 */
+				name: 'google_analytics',
+				
+				/**
+				 *	The tracker definition. This is the important piece that tells gatling
+				 *	how it should handle firing the pixel.
+				 */
+				definition:
+				{
+					/**
+					 *	The path to the tracker library being used. This should not contain
+					 *	the "http" prefix, as gatling will append either http:// or https://
+					 *	automatically. The full path used by google analytics in both cases:
+					 *
+					 *		http://www.google-analytics.com/ga.js
+					 *		https://ssl.google-analytics.com/ga.js
+					 *
+					 *	Notice how there's a "www." and an "ssl." prefix on this URL. Don't
+					 *	add that here either. This path should be only whatever is common to
+					 *	both secure and insecure access. In this case:
+					 */
+					path: 'google-analytics.com/ga.js',
+					
+					/**
+					 *	To handle the "www." prefix. This argument will prepend the value to
+					 *	the [path] variable when used over the _insecure_ protocol. You must add
+					 *	the dot yourself, as gatling doesn't assume anything about how to
+					 *	construct the full path, as the prefix could be an entire different domain.
+					 */
+					prefix: "www.",
+					
+					/**
+					 *	To handle the "ssl." prefix. This argument will prepend the value to
+					 *	the [path] variable when used over the _secure_ protocol. You must add
+					 *	the dot yourself, as gatling doesn't assume anything about how to
+					 *	construct the full path, as the prefix could be an entire different domain.
+					 */
+					securePrefix: "ssl.",
+					
+					/**
+					 *	A special function which is triggered after the tracking pixel itself is
+					 *	included. 
+					 *
+					 *	@param tracker	The configuration object provided to fire an instance of this
+					 *					pixel. This is not the actual "google analytics" tracker itself.
+					 */
+					loaded: function (tracker)
+					{	
+						/**
+						 *	The tracker.ready() function is a callback which can be defined by the 
+						 *	configuration used to fire this pixel. If you do not implement a 
+						 *	"loaded" method inside of your tracker declaration, then tracker.ready()
+						 *	will be triggered automatically. If you define a tracker.loaded() method, 
+						 *	then tracker.loaded() will be triggered INSTEAD of tracker.ready(), and you
+						 *	must call it yourself.
+						 */
+						tracker.ready(
+						
+							/**
+							 *	Pass the "tracker" settings onto the ready function.
+							 */
+							tracker,
+							
+							/**
+							 *	Create an instance of the google analytics tracker for this configured
+							 *	instance, which is defined by the "trackerID" property on the configuration
+							 *	onject.
+							 */
+							_gat._getTracker(tracker.trackerID)	
+						);
+					}
+				}
+			},
+			
+			/**
+			 *	An example of a simple image-based conversion tracking library, Google Ad Services.
+			 */
+			{
+				/**
+				 *	The name of the tracker.
+				 */
+				name: "google_ad",
+				
+				/**
+				 *	The tracker definition. This is the important piece that tells gatling
+				 *	how it should handle firing the pixel.
+				 */
+				definition:
+				{
+					/**
+					 *	The path to the tracking pixel image which actually triggers the tracking. Notice, the
+					 *	name of this variable is "image" instead of "path". Use "image" when declaring a tracker
+					 *	which only needs to include an image file and not a full javascript library.
+					 *
+					 *	Note: The "image" can still have "prefix" and "securePrefix" values defined for it similar
+					 *	to the above Google Analytics example. This tracker does not need a special secure or insecure
+					 *	prefix, so they're not included in this example. However, they function the same way they
+					 *	do in a javascript based tracker.
+					 */
+					image: "www.googleadservices.com/pagead/conversion/%google_conversion_id%/"
+				},
+				
+				/**
+				 *	You'll notice above that the image contains an odd looking non-valid-url 
+				 *	string, "%google_conversion_id%". This is a part of the URL that is NOT part of
+				 *	the query string, but IS determined by the implementation of the tracker instance.
+				 *
+				 *	When you actually define your tracker instances below, you will be providing data
+				 *	which will be consumed by gatling to properly fire your tracker. Part of that data
+				 *	needs to be grabbed and spliced into the URL itself, though. We define those special
+				 *	pieces of data here, using the following data signature:
+				 *	{
+				 *		"<nameOfTheDataElement>": "<urlReplacementToken>",
+				 *
+				 *		...
+				 *	}
+				 */
+				replacements:
+				{
+					google_conversion_id: "%google_conversion_id%"
+				}
+			}
+		]);
+		
+		//------------------------------
+		//
+		//  Tracker Configuration
+		//
+		//------------------------------
+		
+		/**
+		 *	The last thing you must do with gatling is configure the instances of the trackers you want to load.
+		 *	Above, we were merely defining the types of trackers we wanted to be able to use. This is where you
+		 *	need to input your urchin ids, etc.
+		 */
+		$.gatling.load(
+		[
+			/**
+			 *	Load an instance of the google_analytics tracker.
+			 */
+			{
+				/**
+				 *	The type of declared tracker to fire. The name of the declared tracker is the type of tracker
+				 *	when it's being fired.
+				 */
+				type: 'google_analytics',
+				
+				/**
+				 *	In our google_analytics tracker declaration, we were using the property "tracker.trackerID" to
+				 *	create an instance of the GAT. Gatling will map the "id" property passed here to "trackerID" within
+				 *	the actual tracker configuration object.
+				 */
+				id: 'UA-5555555-1',
+				
+				/**
+				 *	In our google_analytics tracker declaration, we are calling the tracker.ready() function from our
+				 *	tracker.load() method. Similar to how Gatling maps the above "id" property to trackerID, it will
+				 *	likewise map the "listener" property to it's "ready" function, if no loaded function is defined.
+				 *
+				 *	@param tracker		The gatling configuration object.
+				 *
+				 *	@param pageTracker	The instance of the GAT tracker we created in our tracker.loaded() method.
+				 */
+				listener: function (tracker, pageTracker)
+				{
+					pageTracker._setAllowHash(false);
+					pageTracker._setDomainName('.example.com');
+					pageTracker._trackPageview();
+				}
+			},
+			
+			/**
+			 *	Load a different instance of the google_analytics tracker.
+			 */
+			{
+				type: 'google_analytics',
+				
+				id: 'UA-7777777-2',
+				
+				listener: function (tracker, pageTracker)
+				{
+					pageTracker._setAllowHash(false);
+					pageTracker._setDomainName('.example.com');
+					pageTracker._trackPageview();
+				}
+			}
+		]);
+		
+		//------------------------------
+		//
+		//  Tracker Event Configuration
+		//
+		//------------------------------
+		
+		/**
+		 *	A nice "for-free" bonus of gatling is the ability to bind all these non-asynchronous trackers to
+		 *	events which we may only care to track if the user takes a specific action. Lets say, for instance,
+		 *	that we only want to track conversion when the user clicks the track-conversion button...
+		 */
+		$(function ()
+		{
+			$('#track-conversion').click(function ()
+			{
+				/**
+				 *	Any pixels we "load" after the DomReady event will be
+				 *	autofired.
+				 */
+				$.gatling.load(
+				[
+					/**
+					 *	An instance of the google_ad conversion tracker.
+					 */
+					{
+						type: "google_ad",
+						
+						/**
+						 *	The params for a tracker instance should contain all the data needed by the tracker
+						 *	instance to properly track the user. If you recall above, we defined a special replacement
+						 *	rule which would pull the value of the param "google_conversion_id" out and put it into
+						 *	the URL as part of the path. This params object is where that value comes from.
+						 *
+						 *	The way gatling handles params is by stripping out values as they are used. There are three
+						 *	levels in which gatling uses this params array.
+						 *
+						 *	1. Global vars (Anything defined in a "globals" array in the tracker declaration)
+						 *	2. Replacement vars (Anything defined in the "replacements" object in the tracker declaration)
+						 *	3. URL Get Params (Everything else that wasn't used as a global or replacement var)
+						 *
+						 *	So, given the following params, we will actually be firing a conversion tracker with everything
+						 *	except the "google_conversion_id" being passed as a URL param. (?google_conversion_value=0,...)
+						 */
+						params:
+						{
+							/**
+							 *	The specific conversion ID, provided by google ad services. This will be pulled out and made
+							 *	into a URL param. Everything else below will be a get parameter.
+							 */
+							google_conversion_id: 1234567890,
+							
+							/**
+							 *	Used as get parameters...
+							 */
+							label: 'AbCdEf1234GhI...',
+							language: 'en',
+				           	format: '3',
+				            color: '666666',
+				            value: 0,
+				            guid: 'ON',
+				            script: 0
+						}
+					}
+				]);
+				 
+				/**
+				 *	We also want to replace this button with a note for the user.
+				 */
+				$(this).replaceWith("<span>Conversion tracked!</span>");
+			});
+		});
+		
+		//	Check out [http://github.com/Knewton/Gatling/wiki] for more extensive documentation and examples.
+		}(jQuery));
+		</script>
+	</head>
+	<body>
+		<h1>Hello World!</h1>
+		
+		<button id="track-conversion">Click me to simulate a conversion</button>
+	</body>
+</html>
