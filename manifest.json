@@ -1,0 +1,22 @@
+{
+	"name": "gatling", 
+	
+	"class": "plugin", 
+	
+	"framework": "jquery", 
+	
+	"version": "0.1.5", 
+	
+	"composition": ["js"],
+	
+	"dependencies": 
+	{
+		"jquery": 
+		{
+			"framework": 
+			{
+				"jquery": "1.4.2"
+			}
+		}
+	}
+}
